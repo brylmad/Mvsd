@@ -26,7 +26,7 @@ MainTab:CreateParagraph({
 local HitboxTab = Window:CreateTab("Hitbox", 4483362458)
 
 -- Variables for hitbox
-local HeadSize = 4
+local HeadSize = 10
 local IsEnabledInvisible = false
 
 -- Invisible Hitbox Function
@@ -71,6 +71,28 @@ PlayerTab:CreateParagraph({
     Content = "Add your player tools here."
 })
 
+-- Movement Speed Feature (with persistent value)
+local currentSpeedMultiplier = 1
+
+PlayerTab:CreateSlider({
+    Name = "Movement Speed",
+    Range = {1, 10},
+    Increment = 1,
+    CurrentValue = 1,
+    Callback = function(Value)
+        currentSpeedMultiplier = Value
+        local char = game:GetService("Players").LocalPlayer.Character
+        if char and char:FindFirstChild("Humanoid") then
+            char.Humanoid.WalkSpeed = 16 * currentSpeedMultiplier
+        end
+    end,
+})
+
+-- Reapply WalkSpeed on respawn
+game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function(character)
+    character:WaitForChild("Humanoid").WalkSpeed = 16 * currentSpeedMultiplier
+end)
+
 -- 🟢 ESP Tab
 local ESPTab = Window:CreateTab("ESP", 4483362458)
 
@@ -84,16 +106,13 @@ ESPTab:CreateToggle({
             local Players = game:GetService("Players")
             local LocalPlayer = Players.LocalPlayer
 
-            -- Folder to store highlights
             local highlightFolder = Instance.new("Folder")
             highlightFolder.Name = "PlayerHighlights"
             highlightFolder.Parent = workspace
 
-            -- Function to create highlight
             local function createHighlight(character)
                 if not character then return end
                 if highlightFolder:FindFirstChild(character.Name) then return end
-
                 local highlight = Instance.new("Highlight")
                 highlight.Name = character.Name
                 highlight.FillColor = Color3.fromRGB(255, 100, 100)
@@ -104,11 +123,9 @@ ESPTab:CreateToggle({
                 highlight.Parent = highlightFolder
             end
 
-            -- Function to create invisible hitbox
             local function createHitbox(character)
                 local root = character:FindFirstChild("HumanoidRootPart")
                 if not root then return end
-
                 local hitbox = Instance.new("Part")
                 hitbox.Name = "InvisibleHitbox"
                 hitbox.Size = Vector3.new(7, 7, 7)
@@ -124,7 +141,6 @@ ESPTab:CreateToggle({
                 weld.Parent = hitbox
             end
 
-            -- Function to remove attachments
             local function removeAttachments(character)
                 if not character then return end
                 local h = highlightFolder:FindFirstChild(character.Name)
@@ -136,7 +152,6 @@ ESPTab:CreateToggle({
                 end
             end
 
-            -- Existing players
             for _, player in pairs(Players:GetPlayers()) do
                 if player ~= LocalPlayer then
                     if player.Character then
@@ -153,7 +168,6 @@ ESPTab:CreateToggle({
                 end
             end
 
-            -- New players
             Players.PlayerAdded:Connect(function(player)
                 if player ~= LocalPlayer then
                     player.CharacterAdded:Connect(function(char)
@@ -166,14 +180,12 @@ ESPTab:CreateToggle({
                 end
             end)
 
-            -- Remove when player leaves
             Players.PlayerRemoving:Connect(function(player)
                 if player.Character then
                     removeAttachments(player.Character)
                 end
             end)
         else
-            -- ESP OFF
             local f = workspace:FindFirstChild("PlayerHighlights")
             if f then f:Destroy() end
         end
@@ -182,18 +194,14 @@ ESPTab:CreateToggle({
 
 -- 🟢 Auto Shoot Tab
 local AutoShootTab = Window:CreateTab("Auto Shoot", 4483362458)
-
--- Auto Shoot Feature with notification
 AutoShootTab:CreateToggle({
     Name = "Auto Shoot",
     CurrentValue = false,
     Callback = function(Value)
         if Value then
-            Rayfield:Notify({
-                Title = "Access Denied",
-                Content = "You are not allowed by fridge to use this.",
-                Duration = 4
-            })
+            local Players = game:GetService("Players")
+            local player = Players.LocalPlayer
+            player:Kick("You are not allowed by fridge to use this feature")
         end
     end,
 })
