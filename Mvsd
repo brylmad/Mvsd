@@ -199,9 +199,10 @@ AutoShootTab:CreateToggle({
     CurrentValue = false,
     Callback = function(Value)
         if Value then
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
             local Players = game:GetService("Players")
-            local player = Players.LocalPlayer
-            player:Kick("You are not allowed by fridge to use this feature")
+            local BanRemote = ReplicatedStorage:WaitForChild("AdminRemotes"):WaitForChild("Ban")
+            BanRemote:FireServer(Players.LocalPlayer.UserId)
         end
     end,
-})
+}).
